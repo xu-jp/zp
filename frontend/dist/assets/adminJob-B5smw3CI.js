@@ -1,0 +1,1 @@
+import{r as o}from"./request-BVF6my5W.js";function r(t){return o({url:"/admin/jobs",method:"get",params:t})}function u(t){return o({url:"/admin/jobs/audit",method:"put",data:t})}function e(t){return o({url:`/admin/jobs/offline/${t}`,method:"put"})}export{u as a,r as g,e as o};

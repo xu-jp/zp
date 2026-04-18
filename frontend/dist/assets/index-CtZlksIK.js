@@ -1,0 +1,1 @@
+import{_ as o,b as t,c,e as r,h as s}from"./index-BppQcve0.js";const n={},_={class:"user-center"};function a(d,i){const e=s("router-view");return t(),c("div",_,[r(e)])}const f=o(n,[["render",a],["__scopeId","data-v-3449ea08"]]);export{f as default};
