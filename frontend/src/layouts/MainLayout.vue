@@ -43,6 +43,7 @@
       <el-container>
         <el-header class="header">
           <div class="header-left">
+            <!-- 返回按钮 -->
             <el-button
               v-if="showBackButton"
               class="back-button"
@@ -109,7 +110,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore, useNavigationStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
 import {
-  Fold, Expand, ArrowDown, User, SwitchButton,
+  House, Fold, Expand, ArrowDown, User, SwitchButton,
   Briefcase, Document, Star, Tickets, Calendar, Setting, List, ArrowLeft
 } from '@element-plus/icons-vue'
 
@@ -123,10 +124,12 @@ const activeMenu = computed(() => {
   return route.path
 })
 
+// 是否显示返回按钮
 const showBackButton = computed(() => {
   return navigationStore.shouldShowBackButton(route.path)
 })
 
+// 获取首页路径
 const getHomePath = () => {
   switch (userType.value) {
     case 3:
@@ -136,11 +139,14 @@ const getHomePath = () => {
   }
 }
 
+// 处理返回按钮点击
 const handleBack = () => {
   const previousPage = navigationStore.goBack(router)
   if (previousPage) {
+    // 恢复页面状态
     const state = navigationStore.getPageState(previousPage.path)
     router.push(previousPage.fullPath || previousPage.path).then(() => {
+      // 恢复滚动位置
       if (state && state.scrollPosition) {
         setTimeout(() => {
           window.scrollTo(state.scrollPosition.x, state.scrollPosition.y)
@@ -148,16 +154,19 @@ const handleBack = () => {
       }
     })
   } else {
+    // 如果没有历史记录，返回首页
     router.push(getHomePath())
   }
 }
 
+// 监听路由变化，记录导航历史
 watch(() => route.path, (newPath, oldPath) => {
   if (newPath !== oldPath) {
     navigationStore.pushHistory(route)
   }
 }, { immediate: true })
 
+// 页面加载时恢复状态
 onMounted(() => {
   navigationStore.pushHistory(route)
 })
@@ -435,6 +444,7 @@ const handleCommand = (command) => {
       align-items: center;
 
       .back-button {
+        margin-right: 12px;
         font-weight: var(--font-weight-medium);
         color: var(--text-secondary);
         transition: all var(--transition-fast);
