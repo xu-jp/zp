@@ -44,14 +44,22 @@ public class RecommendServiceImpl implements RecommendService {
             return new ArrayList<>();
         }
 
+        List<JobWithScore> preFilteredJobs = calculateJobScores(allJobs, resume);
+        preFilteredJobs.sort((a, b) -> Double.compare(b.score, a.score));
+        
+        List<Job> candidateJobs = preFilteredJobs.stream()
+                .limit(15)
+                .collect(Collectors.toList());
+
         List<JobWithScore> scoredJobs;
         
         try {
-            log.info("使用AI职位推荐 - 用户: {}, 简历: {}", userId, resume != null ? resume.getId() : null);
-            scoredJobs = calculateJobScoresWithAI(allJobs, resume);
+            log.info("使用AI职位推荐 - 用户: {}, 简历: {}, 候选职位: {}", 
+                    userId, resume != null ? resume.getId() : null, candidateJobs.size());
+            scoredJobs = calculateJobScoresWithAI(candidateJobs, resume);
         } catch (Exception e) {
             log.warn("AI推荐失败，使用规则匹配: {}", e.getMessage());
-            scoredJobs = calculateJobScores(allJobs, resume);
+            scoredJobs = preFilteredJobs;
         }
         
         scoredJobs.sort((a, b) -> Double.compare(b.score, a.score));
@@ -188,60 +196,57 @@ public class RecommendServiceImpl implements RecommendService {
     }
 
     private String buildRecommendationPrompt(Resume resume, List<Job> jobs) {
+        List<Long> companyIds = jobs.stream()
+                .map(Job::getCompanyId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Company> companyMap = new HashMap<>();
+        if (!companyIds.isEmpty()) {
+            List<Company> companies = companyService.listByIds(companyIds);
+            companyMap = companies.stream().collect(Collectors.toMap(Company::getId, c -> c));
+        }
+
+        final Map<Long, Company> finalCompanyMap = companyMap;
+
         StringBuilder prompt = new StringBuilder();
-        prompt.append("请根据求职者的简历信息，从以下职位列表中推荐最匹配的职位，并计算匹配度分数。\n\n");
+        prompt.append("根据求职者简历推荐最匹配的职位，返回JSON格式结果。\n\n");
         
-        prompt.append("【求职者简历信息】\n");
-        prompt.append("姓名：").append(resume.getRealName() != null ? resume.getRealName() : "未提供").append("\n");
-        prompt.append("学历：").append(resume.getEducation() != null ? resume.getEducation() : "未提供").append("\n");
-        prompt.append("学校：").append(resume.getSchool() != null ? resume.getSchool() : "未提供").append("\n");
-        prompt.append("专业技能：").append(resume.getSkills() != null ? resume.getSkills() : "未提供").append("\n");
-        prompt.append("工作经历：").append(resume.getWorkExperience() != null ? resume.getWorkExperience() : "未提供").append("\n");
-        prompt.append("项目经验：").append(resume.getProjectExperience() != null ? resume.getProjectExperience() : "未提供").append("\n");
-        prompt.append("所在城市：").append(resume.getLocation() != null ? resume.getLocation() : "未提供").append("\n");
+        prompt.append("【简历】\n");
+        prompt.append("学历: ").append(resume.getEducation() != null ? resume.getEducation() : "不限").append("\n");
+        prompt.append("学校: ").append(resume.getSchool() != null ? resume.getSchool() : "").append("\n");
+        prompt.append("技能: ").append(resume.getSkills() != null ? resume.getSkills() : "").append("\n");
+        prompt.append("经历: ").append(truncate(resume.getWorkExperience(), 200)).append("\n");
+        prompt.append("城市: ").append(resume.getLocation() != null ? resume.getLocation() : "").append("\n");
         
-        prompt.append("\n【可推荐职位列表】\n");
+        prompt.append("\n【职位列表】\n");
         for (int i = 0; i < jobs.size(); i++) {
             Job job = jobs.get(i);
-            prompt.append("职位").append(i + 1).append("：\n");
-            prompt.append("  职位ID: ").append(job.getId()).append("\n");
-            prompt.append("  职位名称: ").append(job.getTitle()).append("\n");
+            Company company = job.getCompanyId() != null ? finalCompanyMap.get(job.getCompanyId()) : null;
             
-            String companyName = "未提供";
-            if (job.getCompanyId() != null) {
-                try {
-                    Company company = companyService.getById(job.getCompanyId());
-                    if (company != null) {
-                        companyName = company.getName();
-                    }
-                } catch (Exception e) {
-                    log.warn("获取公司信息失败: companyId={}", job.getCompanyId(), e);
-                }
-            }
-            prompt.append("  公司名称: ").append(companyName).append("\n");
-            
-            prompt.append("  所在城市: ").append(job.getLocation() != null ? job.getLocation() : "未提供").append("\n");
-            prompt.append("  薪资范围: ").append(job.getSalaryMin() != null ? job.getSalaryMin() : 0).append("-").append(job.getSalaryMax() != null ? job.getSalaryMax() : 0).append("K\n");
-            prompt.append("  经验要求: ").append(getExperienceText(job.getExperience())).append("\n");
-            prompt.append("  学历要求: ").append(job.getEducation() != null ? job.getEducation() : "不限").append("\n");
-            prompt.append("  职位要求: ").append(job.getRequirement() != null ? job.getRequirement() : "无").append("\n");
+            prompt.append(i + 1).append(". ID:").append(job.getId());
+            prompt.append(" | ").append(job.getTitle());
+            prompt.append(" | ").append(company != null ? company.getName() : "");
+            prompt.append(" | ").append(job.getLocation() != null ? job.getLocation() : "");
+            prompt.append(" | ").append(job.getSalaryMin() != null ? job.getSalaryMin() : 0).append("-").append(job.getSalaryMax() != null ? job.getSalaryMax() : 0).append("K");
+            prompt.append(" | 学历:").append(job.getEducation() != null ? job.getEducation() : "不限");
+            prompt.append(" | 经验:").append(getExperienceText(job.getExperience()));
+            prompt.append(" | 要求:").append(truncate(job.getRequirement(), 100));
             prompt.append("\n");
         }
         
-        prompt.append("\n【推荐要求】\n");
-        prompt.append("请从以上职位中推荐5-10个最匹配的职位，按匹配度从高到低排序。\n");
-        prompt.append("请按以下JSON格式返回推荐结果，不要包含其他内容：\n");
-        prompt.append("{\n");
-        prompt.append("  \"recommendations\": [\n");
-        prompt.append("    {\n");
-        prompt.append("      \"jobId\": 职位ID,\n");
-        prompt.append("      \"matchScore\": 0-100的匹配分数,\n");
-        prompt.append("      \"reason\": \"推荐理由（简要说明匹配点）\"\n");
-        prompt.append("    }\n");
-        prompt.append("  ]\n");
-        prompt.append("}\n");
+        prompt.append("\n【返回格式】\n");
+        prompt.append("{\"recommendations\":[{\"jobId\":ID,\"matchScore\":分数,\"reason\":\"理由\"}]}\n");
+        prompt.append("推荐5个最匹配职位，按匹配度排序。\n");
         
         return prompt.toString();
+    }
+
+    private String truncate(String text, int maxLength) {
+        if (text == null) return "";
+        if (text.length() <= maxLength) return text;
+        return text.substring(0, maxLength) + "...";
     }
 
     private List<JobWithScore> parseRecommendationResponse(String response, List<Job> jobs) {

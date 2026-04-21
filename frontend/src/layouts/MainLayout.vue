@@ -10,7 +10,7 @@
             <span v-if="!isCollapse" class="logo-text">{{ centerName }}</span>
           </transition>
         </div>
-        
+
         <el-menu
           :default-active="activeMenu"
           :collapse="isCollapse"
@@ -34,24 +34,24 @@
             </el-sub-menu>
           </template>
         </el-menu>
-        
+
         <div class="collapse-btn" @click="isCollapse = !isCollapse">
           <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
         </div>
       </el-aside>
-      
+
       <el-container>
         <el-header class="header">
           <div class="header-left">
-            <el-breadcrumb separator="/" class="breadcrumb">
-              <el-breadcrumb-item :to="{ path: '/home' }">
-                <el-icon class="breadcrumb-icon"><House /></el-icon>
-                <span>首页</span>
-              </el-breadcrumb-item>
-              <el-breadcrumb-item v-if="currentRoute.meta?.title">
-                {{ currentRoute.meta.title }}
-              </el-breadcrumb-item>
-            </el-breadcrumb>
+            <el-button
+              v-if="showBackButton"
+              class="back-button"
+              @click="handleBack"
+              :icon="ArrowLeft"
+              text
+            >
+              返回
+            </el-button>
           </div>
           
           <div class="header-right">
@@ -105,23 +105,61 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useUserStore, useNavigationStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
-import { 
-  House, Fold, Expand, ArrowDown, User, SwitchButton,
-  Briefcase, Document, Star, Tickets, Calendar, Setting, List
+import {
+  Fold, Expand, ArrowDown, User, SwitchButton,
+  Briefcase, Document, Star, Tickets, Calendar, Setting, List, ArrowLeft
 } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
+const navigationStore = useNavigationStore()
 const router = useRouter()
 const route = useRoute()
 const isCollapse = ref(false)
 
-const currentRoute = computed(() => route)
-
 const activeMenu = computed(() => {
   return route.path
+})
+
+const showBackButton = computed(() => {
+  return navigationStore.shouldShowBackButton(route.path)
+})
+
+const getHomePath = () => {
+  switch (userType.value) {
+    case 3:
+      return '/admin'
+    default:
+      return '/home'
+  }
+}
+
+const handleBack = () => {
+  const previousPage = navigationStore.goBack(router)
+  if (previousPage) {
+    const state = navigationStore.getPageState(previousPage.path)
+    router.push(previousPage.fullPath || previousPage.path).then(() => {
+      if (state && state.scrollPosition) {
+        setTimeout(() => {
+          window.scrollTo(state.scrollPosition.x, state.scrollPosition.y)
+        }, 100)
+      }
+    })
+  } else {
+    router.push(getHomePath())
+  }
+}
+
+watch(() => route.path, (newPath, oldPath) => {
+  if (newPath !== oldPath) {
+    navigationStore.pushHistory(route)
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  navigationStore.pushHistory(route)
 })
 
 const userType = computed(() => userStore.userType)
@@ -396,37 +434,17 @@ const handleCommand = (command) => {
       display: flex;
       align-items: center;
 
-      .breadcrumb {
-        display: flex;
-        align-items: center;
-        
-        :deep(.el-breadcrumb__item) {
-          .el-breadcrumb__inner {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-secondary);
-            font-weight: var(--font-weight-medium);
-            transition: color var(--transition-fast);
-            
-            &:hover {
-              color: var(--primary-600);
-            }
-            
-            &.is-link {
-              font-weight: var(--font-weight-medium);
-            }
-          }
-          
-          &:last-child {
-            .el-breadcrumb__inner {
-              color: var(--text-primary);
-              font-weight: var(--font-weight-semibold);
-            }
-          }
+      .back-button {
+        font-weight: var(--font-weight-medium);
+        color: var(--text-secondary);
+        transition: all var(--transition-fast);
+
+        &:hover {
+          color: var(--primary-600);
+          background: var(--primary-50);
         }
-        
-        .breadcrumb-icon {
+
+        .el-icon {
           font-size: 16px;
         }
       }

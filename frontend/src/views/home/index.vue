@@ -289,18 +289,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { getJobList } from '@/api/job'
-import { 
-  Search, ArrowRight, View, Document, Location, Clock, Reading, 
+import {
+  Search, ArrowRight, View, Document, Location, Clock, Reading,
   Briefcase, Coin, User, OfficeBuilding, Trophy, Star
 } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
+import { useUserStore, useNavigationStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+const navigationStore = useNavigationStore()
 const loading = ref(false)
 const jobList = ref([])
 const total = ref(0)
@@ -334,12 +336,45 @@ const searchForm = reactive({
   pageSize: 12
 })
 
+// 保存页面状态
+const savePageState = () => {
+  const state = {
+    searchForm: { ...searchForm },
+    scrollPosition: { x: window.scrollX, y: window.scrollY },
+    jobList: jobList.value,
+    total: total.value
+  }
+  navigationStore.savePageState('/home', state)
+}
+
+// 恢复页面状态
+const restorePageState = () => {
+  const state = navigationStore.getPageState('/home')
+  if (state && state.searchForm) {
+    Object.assign(searchForm, state.searchForm)
+    if (state.jobList) {
+      jobList.value = state.jobList
+      total.value = state.total
+    }
+    // 恢复滚动位置
+    if (state.scrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(state.scrollPosition.x, state.scrollPosition.y)
+      }, 100)
+    }
+    return true
+  }
+  return false
+}
+
 const fetchJobList = async () => {
   loading.value = true
   try {
     const res = await getJobList(searchForm)
     jobList.value = res.data.records
     total.value = res.data.total
+    // 保存状态
+    savePageState()
   } catch (error) {
     console.error('Failed to fetch job list:', error)
   } finally {
@@ -372,6 +407,8 @@ const resetFilters = () => {
 }
 
 const goToDetail = (id) => {
+  // 保存当前状态
+  savePageState()
   router.push(`/jobs/${id}`)
 }
 
@@ -389,11 +426,37 @@ const quickApply = (job) => {
     router.push('/login')
     return
   }
+  // 保存当前状态
+  savePageState()
   router.push(`/jobs/${job.id}`)
 }
 
+// 监听滚动事件，保存滚动位置
+let scrollTimeout = null
+const handleScroll = () => {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
+  scrollTimeout = setTimeout(() => {
+    savePageState()
+  }, 200)
+}
+
 onMounted(() => {
-  fetchJobList()
+  // 尝试恢复状态，如果没有缓存则重新加载
+  const restored = restorePageState()
+  if (!restored) {
+    fetchJobList()
+  }
+  // 监听滚动事件
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
 })
 </script>
 

@@ -4,6 +4,7 @@ export function getRecommendJobs(limit = 5) {
   return request({
     url: '/recommend/jobs',
     method: 'get',
-    params: { limit }
+    params: { limit },
+    timeout: 60000
   })
 }

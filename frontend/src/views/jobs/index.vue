@@ -135,11 +135,21 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecommendJobs } from '@/api/recommend'
 import { MagicStick, Refresh, View, Document, Trophy, Check } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { useRecommendStore } from '@/stores'
 
 const router = useRouter()
+const recommendStore = useRecommendStore()
 const loading = ref(false)
 const recommendJobs = ref([])
 const hasLoaded = ref(false)
+
+onMounted(() => {
+  if (recommendStore.hasCache) {
+    recommendJobs.value = recommendStore.recommendJobs
+    hasLoaded.value = true
+  }
+})
 
 const refreshRecommend = () => {
   hasLoaded.value = true
@@ -149,10 +159,16 @@ const refreshRecommend = () => {
 const fetchRecommendJobs = async () => {
   loading.value = true
   try {
-    const res = await getRecommendJobs(10)
+    const res = await getRecommendJobs(5)
     recommendJobs.value = res.data || []
+    recommendStore.setRecommendJobs(recommendJobs.value)
   } catch (error) {
     console.error('获取推荐职位失败:', error)
+    if (error.code === 'ECONNABORTED') {
+      ElMessage.warning('推荐请求超时，请稍后重试')
+    } else {
+      ElMessage.error('推荐服务暂时不可用，请稍后重试')
+    }
   } finally {
     loading.value = false
   }
