@@ -1,11 +1,16 @@
 <template>
   <div class="main-layout">
     <el-container>
-      <el-aside :width="isCollapse ? '64px' : '220px'" class="aside">
+      <el-aside :width="isCollapse ? '72px' : '240px'" class="aside">
         <div class="logo" @click="$router.push('/home')">
-          <el-icon v-if="isCollapse"><House /></el-icon>
-          <span v-else>{{ centerName }}</span>
+          <div class="logo-icon" :class="{ collapsed: isCollapse }">
+            <el-icon><House /></el-icon>
+          </div>
+          <transition name="fade">
+            <span v-if="!isCollapse" class="logo-text">{{ centerName }}</span>
+          </transition>
         </div>
+        
         <el-menu
           :default-active="activeMenu"
           :collapse="isCollapse"
@@ -14,11 +19,11 @@
           class="side-menu"
         >
           <template v-for="item in menuList" :key="item.path">
-            <el-menu-item v-if="!item.children" :index="item.path">
+            <el-menu-item v-if="!item.children" :index="item.path" class="menu-item-wrapper">
               <el-icon><component :is="item.icon" /></el-icon>
               <template #title>{{ item.title }}</template>
             </el-menu-item>
-            <el-sub-menu v-else :index="item.path">
+            <el-sub-menu v-else :index="item.path" class="menu-item-wrapper">
               <template #title>
                 <el-icon><component :is="item.icon" /></el-icon>
                 <span>{{ item.title }}</span>
@@ -29,48 +34,70 @@
             </el-sub-menu>
           </template>
         </el-menu>
+        
         <div class="collapse-btn" @click="isCollapse = !isCollapse">
           <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
         </div>
       </el-aside>
+      
       <el-container>
         <el-header class="header">
           <div class="header-left">
-            <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-              <el-breadcrumb-item v-if="currentRoute.meta?.title">{{ currentRoute.meta.title }}</el-breadcrumb-item>
+            <el-breadcrumb separator="/" class="breadcrumb">
+              <el-breadcrumb-item :to="{ path: '/home' }">
+                <el-icon class="breadcrumb-icon"><House /></el-icon>
+                <span>首页</span>
+              </el-breadcrumb-item>
+              <el-breadcrumb-item v-if="currentRoute.meta?.title">
+                {{ currentRoute.meta.title }}
+              </el-breadcrumb-item>
             </el-breadcrumb>
           </div>
+          
           <div class="header-right">
             <template v-if="userStore.isLoggedIn">
-              <el-dropdown @command="handleCommand">
-                <span class="user-info">
-                  <el-avatar :size="36" :src="userStore.userInfo.avatar">
+              <el-dropdown @command="handleCommand" trigger="click" class="user-dropdown">
+                <div class="user-info">
+                  <el-avatar :size="38" :src="userStore.userInfo.avatar" class="user-avatar">
                     {{ userStore.username?.charAt(0)?.toUpperCase() }}
                   </el-avatar>
-                  <span class="username">{{ userStore.userInfo.realName || userStore.username }}</span>
-                  <el-icon><ArrowDown /></el-icon>
-                </span>
+                  <div class="user-details">
+                    <span class="username">{{ userStore.userInfo.realName || userStore.username }}</span>
+                    <span class="user-role">{{ getRoleName(userStore.userType) }}</span>
+                  </div>
+                  <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+                </div>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="profile">
-                      <el-icon><User /></el-icon>系统中心
+                      <el-icon><User /></el-icon>
+                      <span>系统中心</span>
                     </el-dropdown-item>
                     <el-dropdown-item command="logout" divided>
-                      <el-icon><SwitchButton /></el-icon>退出登录
+                      <el-icon><SwitchButton /></el-icon>
+                      <span>退出登录</span>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
             </template>
             <template v-else>
-              <el-button type="primary" @click="$router.push('/login')">登录</el-button>
-              <el-button @click="$router.push('/register')">注册</el-button>
+              <el-button type="primary" @click="$router.push('/login')" class="login-btn">
+                登录
+              </el-button>
+              <el-button @click="$router.push('/register')" class="register-btn">
+                注册
+              </el-button>
             </template>
           </div>
         </el-header>
+        
         <el-main class="main">
-          <router-view />
+          <router-view v-slot="{ Component }">
+            <transition name="page-fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -78,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useRouter, useRoute } from 'vue-router'
 import { 
@@ -111,6 +138,19 @@ const centerName = computed(() => {
       return '智能招聘系统'
   }
 })
+
+const getRoleName = (type) => {
+  switch (type) {
+    case 1:
+      return '求职者'
+    case 2:
+      return '招聘者'
+    case 3:
+      return '管理员'
+    default:
+      return '游客'
+  }
+}
 
 const menuList = computed(() => {
   switch (userType.value) {
@@ -175,26 +215,66 @@ const handleCommand = (command) => {
 .main-layout {
   height: 100vh;
   display: flex;
+  background: var(--gray-50);
 
   .aside {
-    background: linear-gradient(180deg, #1a1f36 0%, #2d3555 100%);
+    background: linear-gradient(180deg, var(--primary-800) 0%, var(--primary-700) 50%, var(--primary-600) 100%);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s;
+    transition: width var(--transition-slow);
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    z-index: 10;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
 
     .logo {
-      height: 60px;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      font-size: 18px;
-      font-weight: 600;
+      gap: 12px;
+      padding: 0 16px;
       cursor: pointer;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1;
       
-      .el-icon {
-        font-size: 24px;
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-normal);
+        flex-shrink: 0;
+        
+        .el-icon {
+          font-size: 22px;
+          color: white;
+        }
+        
+        &.collapsed {
+          width: 36px;
+          height: 36px;
+        }
+      }
+      
+      .logo-text {
+        font-size: 16px;
+        font-weight: var(--font-weight-bold);
+        color: white;
+        white-space: nowrap;
+        letter-spacing: 0.5px;
       }
     }
 
@@ -202,20 +282,46 @@ const handleCommand = (command) => {
       flex: 1;
       border-right: none;
       background: transparent;
+      padding: 8px;
+      position: relative;
+      z-index: 1;
 
       :deep(.el-menu-item) {
         color: rgba(255, 255, 255, 0.7);
-        height: 50px;
-        line-height: 50px;
+        height: 48px;
+        line-height: 48px;
+        margin: 4px 0;
+        border-radius: var(--radius-lg);
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 3px;
+          height: 100%;
+          background: white;
+          transform: scaleY(0);
+          transition: transform var(--transition-normal);
+        }
 
         &:hover {
           background: rgba(255, 255, 255, 0.1);
-          color: #fff;
+          color: white;
+          transform: translateX(4px);
         }
 
         &.is-active {
-          background: linear-gradient(90deg, #409eff 0%, rgba(64, 158, 255, 0.5) 100%);
-          color: #fff;
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+          font-weight: var(--font-weight-medium);
+          
+          &::before {
+            transform: scaleY(1);
+          }
         }
 
         .el-icon {
@@ -226,18 +332,21 @@ const handleCommand = (command) => {
       :deep(.el-sub-menu) {
         .el-sub-menu__title {
           color: rgba(255, 255, 255, 0.7);
-          height: 50px;
-          line-height: 50px;
+          height: 48px;
+          line-height: 48px;
+          margin: 4px 0;
+          border-radius: var(--radius-lg);
+          transition: all var(--transition-normal);
 
           &:hover {
             background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            color: white;
           }
         }
 
         &.is-active {
           .el-sub-menu__title {
-            color: #fff;
+            color: white;
           }
         }
 
@@ -249,21 +358,25 @@ const handleCommand = (command) => {
     }
 
     .collapse-btn {
-      height: 48px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: rgba(255, 255, 255, 0.7);
       cursor: pointer;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all var(--transition-normal);
+      position: relative;
+      z-index: 1;
 
       &:hover {
-        color: #fff;
+        color: white;
         background: rgba(255, 255, 255, 0.1);
       }
 
       .el-icon {
-        font-size: 18px;
+        font-size: 20px;
+        transition: transform var(--transition-normal);
       }
     }
   }
@@ -272,14 +385,51 @@ const handleCommand = (command) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background: white;
+    box-shadow: var(--shadow-sm);
     padding: 0 24px;
-    height: 60px;
+    height: 64px;
+    position: relative;
+    z-index: 5;
 
     .header-left {
       display: flex;
       align-items: center;
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        
+        :deep(.el-breadcrumb__item) {
+          .el-breadcrumb__inner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-weight: var(--font-weight-medium);
+            transition: color var(--transition-fast);
+            
+            &:hover {
+              color: var(--primary-600);
+            }
+            
+            &.is-link {
+              font-weight: var(--font-weight-medium);
+            }
+          }
+          
+          &:last-child {
+            .el-breadcrumb__inner {
+              color: var(--text-primary);
+              font-weight: var(--font-weight-semibold);
+            }
+          }
+        }
+        
+        .breadcrumb-icon {
+          font-size: 16px;
+        }
+      }
     }
 
     .header-right {
@@ -287,31 +437,113 @@ const handleCommand = (command) => {
       align-items: center;
       gap: 12px;
 
+      .user-dropdown {
+        cursor: pointer;
+      }
+
       .user-info {
         display: flex;
         align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 6px 12px;
-        border-radius: 8px;
-        transition: all 0.3s;
+        gap: 12px;
+        padding: 6px 12px 6px 6px;
+        border-radius: var(--radius-xl);
+        transition: all var(--transition-normal);
+        background: var(--gray-50);
 
         &:hover {
-          background: #f5f7fa;
+          background: var(--gray-100);
+          
+          .dropdown-arrow {
+            transform: rotate(180deg);
+          }
         }
 
-        .username {
-          color: #333;
-          font-size: 14px;
+        .user-avatar {
+          border: 2px solid var(--primary-200);
+          box-shadow: var(--shadow-sm);
+          background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+          color: white;
+          font-weight: var(--font-weight-semibold);
+        }
+
+        .user-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+
+          .username {
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            line-height: 1.2;
+          }
+
+          .user-role {
+            color: var(--text-tertiary);
+            font-size: var(--font-size-xs);
+            line-height: 1.2;
+          }
+        }
+
+        .dropdown-arrow {
+          color: var(--text-tertiary);
+          transition: transform var(--transition-normal);
+          font-size: 12px;
+        }
+      }
+
+      .login-btn,
+      .register-btn {
+        height: 38px;
+        padding: 0 20px;
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-medium);
+        transition: all var(--transition-normal);
+      }
+
+      .register-btn {
+        border: 1px solid var(--border-default);
+        color: var(--text-secondary);
+        
+        &:hover {
+          border-color: var(--primary-400);
+          color: var(--primary-600);
+          background: var(--primary-50);
         }
       }
     }
   }
 
   .main {
-    background: #f5f7fa;
-    padding: 20px;
+    background: var(--gray-50);
+    padding: 24px;
     overflow-y: auto;
+    min-height: calc(100vh - 64px);
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-normal);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: all var(--transition-slow);
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

@@ -8,7 +8,9 @@ public class BackendApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(BackendApplication.class, args);
-        System.out.println("-----------------------后端服务启动成功-----------------------");
+        System.out.println("===============================================================");
+        System.out.println("=========================后端服务启动成功=========================");
+        System.out.println("===============================================================");
     }
 
 }

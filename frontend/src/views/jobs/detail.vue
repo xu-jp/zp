@@ -1,97 +1,151 @@
 <template>
   <div class="job-detail-page" v-loading="loading">
     <div v-if="job" class="detail-container">
-      <el-card class="job-card">
-        <div class="job-header">
-          <div class="job-title-section">
-            <h1 class="job-title">{{ job.title }}</h1>
-            <span class="salary">{{ job.salaryRange }}</span>
+      <div class="job-hero">
+        <div class="job-main-info">
+          <div class="job-header">
+            <div class="title-section">
+              <h1 class="job-title">{{ job.title }}</h1>
+              <span class="salary">{{ job.salaryRange }}</span>
+            </div>
+            <div class="job-badges">
+              <el-tag v-if="job.auditStatus !== 1" type="warning" effect="dark" class="status-badge">
+                待审核
+              </el-tag>
+              <el-tag v-else-if="job.status === 1" type="success" effect="dark" class="status-badge">
+                招聘中
+              </el-tag>
+              <el-tag v-else type="info" effect="dark" class="status-badge">
+                已下架
+              </el-tag>
+            </div>
           </div>
-          <div class="job-status">
-            <el-tag v-if="job.auditStatus !== 1" type="warning">
-              待审核
-            </el-tag>
-            <el-tag v-else-if="job.status === 1" type="success">
-              招聘中
-            </el-tag>
-            <el-tag v-else type="info">
-              已下架
-            </el-tag>
+          
+          <div class="job-meta">
+            <div class="meta-item">
+              <el-icon><Location /></el-icon>
+              <span>{{ job.location }}</span>
+            </div>
+            <div class="meta-item">
+              <el-icon><Clock /></el-icon>
+              <span>{{ job.experienceName }}</span>
+            </div>
+            <div class="meta-item">
+              <el-icon><Reading /></el-icon>
+              <span>{{ job.education }}</span>
+            </div>
+            <div class="meta-item">
+              <el-icon><Briefcase /></el-icon>
+              <span>{{ job.category }}</span>
+            </div>
           </div>
-          <div class="job-tags">
-            <el-tag type="info">{{ job.location }}</el-tag>
-            <el-tag type="info">{{ job.experienceName }}</el-tag>
-            <el-tag type="info">{{ job.education }}</el-tag>
-            <el-tag type="info">{{ job.category }}</el-tag>
-          </div>
+
           <div class="job-stats">
-            <span><el-icon><View /></el-icon> {{ job.viewCount }} 次浏览</span>
-            <span><el-icon><Document /></el-icon> {{ job.applicationCount }} 人投递</span>
+            <div class="stat-item">
+              <el-icon><View /></el-icon>
+              <span class="stat-value">{{ job.viewCount }}</span>
+              <span class="stat-label">次浏览</span>
+            </div>
+            <div class="stat-item">
+              <el-icon><Document /></el-icon>
+              <span class="stat-value">{{ job.applicationCount }}</span>
+              <span class="stat-label">人投递</span>
+            </div>
           </div>
         </div>
-        <div class="action-buttons">
+
+        <div class="job-actions">
           <el-button 
             type="primary" 
             size="large" 
             @click="handleApply"
             :disabled="hasApplied"
+            class="apply-button"
           >
             <el-icon><Position /></el-icon>
-            {{ hasApplied ? '已投递' : '立即投递' }}
+            {{ hasApplied ? '已投递' : '立即投递简历' }}
           </el-button>
           <el-button 
             size="large" 
             @click="handleFavorite"
             :type="isFavorited ? 'warning' : 'default'"
+            class="favorite-button"
           >
             <el-icon><Star /></el-icon>
             {{ isFavorited ? '已收藏' : '收藏职位' }}
           </el-button>
         </div>
-      </el-card>
+      </div>
 
-      <el-card class="company-card">
-        <template #header>
-          <span>公司信息</span>
-        </template>
-        <div class="company-info">
-          <el-avatar :size="64" :src="job.companyLogo || defaultLogo">
-            {{ job.companyName?.charAt(0) }}
-          </el-avatar>
-          <div class="company-detail">
-            <h3 class="company-name">{{ job.companyName }}</h3>
-            <div class="company-meta">
-              <span><el-icon><OfficeBuilding /></el-icon> {{ job.companyIndustry }}</span>
-              <span><el-icon><User /></el-icon> {{ job.companyScale }}</span>
-              <span><el-icon><Location /></el-icon> {{ job.location }}</span>
+      <div class="content-grid">
+        <div class="main-content">
+          <div class="section-card description-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <el-icon><Document /></el-icon>
+                职位描述
+              </h2>
+            </div>
+            <div class="section-content">
+              <pre>{{ job.description }}</pre>
+            </div>
+          </div>
+
+          <div class="section-card requirement-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <el-icon><List /></el-icon>
+                任职要求
+              </h2>
+            </div>
+            <div class="section-content">
+              <pre>{{ job.requirement }}</pre>
             </div>
           </div>
         </div>
-      </el-card>
 
-      <el-card class="description-card">
-        <template #header>
-          <span>职位描述</span>
-        </template>
-        <div class="description-content">
-          <pre>{{ job.description }}</pre>
-        </div>
-      </el-card>
+        <div class="side-content">
+          <div class="company-card">
+            <div class="company-header">
+              <el-avatar :size="64" :src="job.companyLogo || defaultLogo" class="company-avatar">
+                {{ job.companyName?.charAt(0) }}
+              </el-avatar>
+              <div class="company-info">
+                <h3 class="company-name">{{ job.companyName }}</h3>
+                <div class="company-industry">{{ job.companyIndustry }}</div>
+              </div>
+            </div>
+            <div class="company-details">
+              <div class="detail-item">
+                <el-icon><OfficeBuilding /></el-icon>
+                <span>{{ job.companyScale || '暂无规模信息' }}</span>
+              </div>
+              <div class="detail-item">
+                <el-icon><Location /></el-icon>
+                <span>{{ job.location }}</span>
+              </div>
+            </div>
+          </div>
 
-      <el-card class="requirement-card">
-        <template #header>
-          <span>任职要求</span>
-        </template>
-        <div class="requirement-content">
-          <pre>{{ job.requirement }}</pre>
+          <div class="tips-card">
+            <h4 class="tips-title">
+              <el-icon><InfoFilled /></el-icon>
+              投递提示
+            </h4>
+            <ul class="tips-list">
+              <li>完善简历可提高面试机会</li>
+              <li>投递后可在"我的投递"查看进度</li>
+              <li>保持联系方式畅通</li>
+            </ul>
+          </div>
         </div>
-      </el-card>
+      </div>
     </div>
 
     <el-empty v-else-if="!loading" description="职位不存在或已下线" />
 
-    <el-dialog v-model="applyDialogVisible" title="投递简历" width="500px">
-      <el-form :model="applyForm" label-width="80px">
+    <el-dialog v-model="applyDialogVisible" title="投递简历" width="500px" class="apply-dialog">
+      <el-form :model="applyForm" label-width="80px" class="apply-form">
         <el-form-item label="选择简历" required>
           <el-select v-model="applyForm.resumeId" placeholder="请选择简历" style="width: 100%">
             <el-option 
@@ -134,7 +188,7 @@ import { getResumeList } from '@/api/resume'
 import { applyJob, checkApplied } from '@/api/application'
 import { addFavorite, removeFavorite, checkFavorited } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
-import { View, Document, Position, Star, OfficeBuilding, User, Location } from '@element-plus/icons-vue'
+import { View, Document, Position, Star, OfficeBuilding, Location, Clock, Reading, Briefcase, List, InfoFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -275,112 +329,359 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .job-detail-page {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
 
   .detail-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 
-  .job-card {
-    .job-header {
-        .job-title-section {
+  .job-hero {
+    background: white;
+    border-radius: var(--radius-2xl);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    animation: slideUp var(--transition-slow) ease-out;
+
+    .job-main-info {
+      flex: 1;
+
+      .job-header {
+        margin-bottom: 20px;
+
+        .title-section {
           display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 16px;
+          align-items: flex-start;
+          gap: 20px;
+          margin-bottom: 12px;
 
           .job-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
+            font-size: 28px;
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
             margin: 0;
+            line-height: 1.3;
           }
 
           .salary {
-            font-size: 24px;
-            color: #ff6b00;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: var(--font-weight-bold);
+            color: var(--accent-600);
+            white-space: nowrap;
           }
         }
 
-        .job-status {
+        .job-badges {
+          display: flex;
+          gap: 8px;
+
+          .status-badge {
+            font-weight: var(--font-weight-medium);
+          }
+        }
+      }
+
+      .job-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        margin-bottom: 24px;
+
+        .meta-item {
           display: flex;
           align-items: center;
           gap: 8px;
-        }
+          color: var(--text-secondary);
+          font-size: var(--font-size-base);
 
-        .job-tags {
+          .el-icon {
+            font-size: 18px;
+            color: var(--primary-500);
+          }
+        }
+      }
+
+      .job-stats {
+        display: flex;
+        gap: 32px;
+        padding: 16px 24px;
+        background: var(--gray-50);
+        border-radius: var(--radius-xl);
+
+        .stat-item {
           display: flex;
+          align-items: center;
           gap: 8px;
-          margin-bottom: 16px;
-        }
 
-        .job-stats {
-          display: flex;
-          gap: 20px;
-          color: #999;
-          font-size: 14px;
+          .el-icon {
+            font-size: 20px;
+            color: var(--text-tertiary);
+          }
 
-          span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+          .stat-value {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-600);
+          }
+
+          .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-tertiary);
           }
         }
       }
+    }
 
-    .action-buttons {
+    .job-actions {
       display: flex;
+      flex-direction: column;
       gap: 12px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid #f0f0f0;
-    }
-  }
+      min-width: 200px;
 
-  .company-card {
-    .company-info {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-
-      .company-detail {
-        .company-name {
+      .apply-button,
+      .favorite-button {
+        height: 48px;
+        border-radius: var(--radius-xl);
+        font-weight: var(--font-weight-semibold);
+        font-size: var(--font-size-base);
+        
+        .el-icon {
           font-size: 18px;
-          font-weight: 600;
-          color: #333;
-          margin: 0 0 12px 0;
         }
+      }
 
-        .company-meta {
-          display: flex;
-          gap: 20px;
-          color: #666;
-          font-size: 14px;
-
-          span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-          }
+      .apply-button {
+        background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+        border: none;
+        
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
         }
       }
     }
   }
 
-  .description-card,
-  .requirement-card {
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-family: inherit;
-      font-size: 14px;
-      line-height: 1.8;
-      color: #333;
-      margin: 0;
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+
+      .section-card {
+        background: white;
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: slideUp var(--transition-slow) ease-out;
+        animation-fill-mode: backwards;
+
+        &.description-section {
+          animation-delay: 100ms;
+        }
+
+        &.requirement-section {
+          animation-delay: 200ms;
+        }
+
+        .section-header {
+          padding: 20px 24px;
+          border-bottom: 1px solid var(--gray-100);
+
+          .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            margin: 0;
+
+            .el-icon {
+              font-size: 20px;
+              color: var(--primary-500);
+            }
+          }
+        }
+
+        .section-content {
+          padding: 24px;
+
+          pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin: 0;
+          }
+        }
+      }
+    }
+
+    .side-content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+
+      .company-card {
+        background: white;
+        border-radius: var(--radius-2xl);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        animation: slideUp var(--transition-slow) ease-out 150ms backwards;
+
+        .company-header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 20px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--gray-100);
+
+          .company-avatar {
+            background: linear-gradient(135deg, var(--primary-100), var(--primary-200));
+            color: var(--primary-700);
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-xl);
+          }
+
+          .company-info {
+            flex: 1;
+
+            .company-name {
+              font-size: var(--font-size-lg);
+              font-weight: var(--font-weight-semibold);
+              color: var(--text-primary);
+              margin: 0 0 4px 0;
+            }
+
+            .company-industry {
+              font-size: var(--font-size-sm);
+              color: var(--text-tertiary);
+            }
+          }
+        }
+
+        .company-details {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+
+          .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+
+            .el-icon {
+              font-size: 16px;
+              color: var(--primary-500);
+            }
+          }
+        }
+      }
+
+      .tips-card {
+        background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+        border-radius: var(--radius-2xl);
+        padding: 20px;
+        animation: slideUp var(--transition-slow) ease-out 250ms backwards;
+
+        .tips-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: var(--font-size-base);
+          font-weight: var(--font-weight-semibold);
+          color: var(--primary-700);
+          margin: 0 0 12px 0;
+
+          .el-icon {
+            font-size: 18px;
+          }
+        }
+
+        .tips-list {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+
+          li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 8px;
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            line-height: 1.6;
+
+            &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 8px;
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: var(--primary-400);
+            }
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .job-detail-page {
+    .job-hero {
+      flex-direction: column;
+      align-items: stretch;
+
+      .job-actions {
+        flex-direction: row;
+        min-width: auto;
+
+        .apply-button,
+        .favorite-button {
+          flex: 1;
+        }
+      }
+    }
+
+    .content-grid {
+      grid-template-columns: 1fr;
+
+      .side-content {
+        order: -1;
+      }
     }
   }
 }
