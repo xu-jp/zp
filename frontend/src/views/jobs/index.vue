@@ -95,7 +95,7 @@
                     <circle cx="100" cy="100" r="90" class="ring-bg" />
                     <circle cx="100" cy="100" r="90" class="ring-progress" />
                   </svg>
-                  <div class="analysis-percentage">{{ analysisProgress }}%</div>
+                  <div class="analysis-percentage">{{ formatProgress(analysisProgress) }}</div>
                 </div>
                 <div class="analysis-particles">
                   <div v-for="i in 8" :key="i" class="analysis-particle" :style="getAnalysisParticleStyle(i)"></div>
@@ -153,10 +153,15 @@
             <div class="jobs-grid">
               <div v-for="(job, index) in recommendJobs" :key="job.id"
                 class="job-card"
-                :style="{ animationDelay: `${index * 0.1}s` }"
+                :class="{ 'highlight-card': index < 3 }"
+                :style="{ animationDelay: `${index * 0.08}s` }"
                 @click="goDetail(job.id)">
                 <div class="card-glow"></div>
                 <div class="card-border"></div>
+                <div v-if="index < 3" class="highlight-badge">
+                  <el-icon><StarFilled /></el-icon>
+                  <span>{{ index === 0 ? '最佳匹配' : index === 1 ? '高度推荐' : '优质职位' }}</span>
+                </div>
 
                 <div class="card-header">
                   <div class="match-indicator" :class="getMatchLevel(job.matchScore)">
@@ -269,7 +274,8 @@ import { getRecommendJobs } from '@/api/recommend'
 import {
   MagicStick, Refresh, View, Document, Check,
   OfficeBuilding, Location, Clock, Reading,
-  ArrowRight, Search, Cpu, DataAnalysis, TrendCharts, Aim
+  ArrowRight, Search, Cpu, DataAnalysis, TrendCharts, Aim,
+  StarFilled
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRecommendStore } from '@/stores'
@@ -404,7 +410,7 @@ const fetchRecommendJobs = async () => {
   }, 200)
 
   try {
-    const res = await getRecommendJobs(5)
+    const res = await getRecommendJobs(6)
     recommendJobs.value = (res.data || []).map(job => ({
       ...job,
       matchDimensions: {
@@ -454,6 +460,10 @@ const getExperienceText = (exp) => {
     5: '10年以上'
   }
   return map[exp] || '经验不限'
+}
+
+const formatProgress = (progress) => {
+  return Math.min(progress, 100).toFixed(2) + '%'
 }
 </script>
 
@@ -1143,8 +1153,9 @@ const getExperienceText = (exp) => {
     .jobs-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 12px;
       overflow-y: auto;
       padding-right: 8px;
 
@@ -1168,21 +1179,23 @@ const getExperienceText = (exp) => {
 
       .job-card {
         position: relative;
-        padding: 18px;
+        padding: 14px 16px;
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(20px);
-        border-radius: 16px;
+        border-radius: 14px;
         border: 1px solid rgba(99, 102, 241, 0.1);
         cursor: pointer;
         overflow: hidden;
         animation: cardAppear 0.5s ease forwards;
         opacity: 0;
-        transform: translateY(16px);
+        transform: translateY(12px);
         transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
 
         &:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 32px rgba(99, 102, 241, 0.12);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12);
 
           .card-glow {
             opacity: 1;
@@ -1191,6 +1204,42 @@ const getExperienceText = (exp) => {
           .action-btn {
             background: linear-gradient(135deg, #6366F1, #8B5CF6);
             color: white;
+          }
+        }
+
+        &.highlight-card {
+          border-color: rgba(99, 102, 241, 0.3);
+          background: rgba(255, 255, 255, 0.95);
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6366F1, #8B5CF6, #EC4899);
+            border-radius: 14px 14px 0 0;
+          }
+
+          .highlight-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 8px;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            z-index: 2;
+
+            .el-icon {
+              font-size: 10px;
+            }
           }
         }
 
@@ -1205,7 +1254,7 @@ const getExperienceText = (exp) => {
         .card-border {
           position: absolute;
           inset: 0;
-          border-radius: 16px;
+          border-radius: 14px;
           border: 1px solid transparent;
           background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15)) border-box;
           mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
@@ -1217,15 +1266,16 @@ const getExperienceText = (exp) => {
         .card-header {
           display: flex;
           align-items: flex-start;
-          gap: 14px;
-          margin-bottom: 14px;
+          gap: 12px;
+          margin-bottom: 10px;
           position: relative;
 
           .match-indicator {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
+            gap: 2px;
+            flex-shrink: 0;
 
             &.high .indicator-ring .ring-fill {
               stroke: #10B981;
@@ -1241,8 +1291,8 @@ const getExperienceText = (exp) => {
 
             .indicator-ring {
               position: relative;
-              width: 48px;
-              height: 48px;
+              width: 44px;
+              height: 44px;
 
               svg {
                 width: 100%;
@@ -1269,7 +1319,7 @@ const getExperienceText = (exp) => {
                 left: 50%;
                 transform: translate(-50%, -50%);
                 font-family: 'Space Grotesk', sans-serif;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 700;
                 color: #111827;
               }
@@ -1285,20 +1335,24 @@ const getExperienceText = (exp) => {
 
           .job-basic {
             flex: 1;
+            min-width: 0;
 
             .job-title {
               font-family: 'Space Grotesk', sans-serif;
-              font-size: 17px;
+              font-size: 15px;
               font-weight: 600;
               color: #111827;
-              margin: 0 0 6px 0;
+              margin: 0 0 4px 0;
               letter-spacing: -0.2px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
 
             .salary-range {
               .salary-value {
                 font-family: 'Space Grotesk', sans-serif;
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: 700;
                 color: #F97316;
               }
@@ -1308,12 +1362,15 @@ const getExperienceText = (exp) => {
 
         .card-body {
           position: relative;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
 
           .company-section {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
 
             .company-logo {
               :deep(.el-avatar) {
@@ -1325,28 +1382,32 @@ const getExperienceText = (exp) => {
 
             .company-info {
               flex: 1;
+              min-width: 0;
 
               .company-name {
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 500;
                 color: #111827;
-                margin-bottom: 2px;
+                margin-bottom: 1px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
               }
 
               .company-meta {
                 display: flex;
                 align-items: center;
-                gap: 6px;
+                gap: 4px;
 
                 .meta-item {
                   display: flex;
                   align-items: center;
-                  gap: 3px;
-                  font-size: 11px;
+                  gap: 2px;
+                  font-size: 10px;
                   color: #6B7280;
 
                   .el-icon {
-                    font-size: 12px;
+                    font-size: 10px;
                   }
                 }
               }
@@ -1356,22 +1417,22 @@ const getExperienceText = (exp) => {
           .job-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
+            gap: 5px;
+            margin-bottom: 8px;
 
             .job-tag {
               display: inline-flex;
               align-items: center;
-              gap: 3px;
-              padding: 4px 10px;
+              gap: 2px;
+              padding: 3px 8px;
               background: rgba(99, 102, 241, 0.05);
-              border-radius: 6px;
-              font-size: 11px;
+              border-radius: 5px;
+              font-size: 10px;
               color: #6B7280;
               border: 1px solid rgba(99, 102, 241, 0.1);
 
               .el-icon {
-                font-size: 12px;
+                font-size: 10px;
                 color: #6366F1;
               }
 
@@ -1401,13 +1462,14 @@ const getExperienceText = (exp) => {
           }
 
           .match-details {
-            padding: 12px;
+            padding: 8px 10px;
             background: rgba(99, 102, 241, 0.02);
-            border-radius: 10px;
+            border-radius: 8px;
             border: 1px solid rgba(99, 102, 241, 0.05);
+            margin-top: auto;
 
             .detail-item {
-              margin-bottom: 8px;
+              margin-bottom: 5px;
 
               &:last-child {
                 margin-bottom: 0;
@@ -1417,23 +1479,23 @@ const getExperienceText = (exp) => {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 4px;
+                margin-bottom: 2px;
 
                 .detail-label {
-                  font-size: 10px;
+                  font-size: 9px;
                   color: #6B7280;
                 }
 
                 .detail-value {
                   font-family: 'Space Grotesk', sans-serif;
-                  font-size: 11px;
+                  font-size: 10px;
                   font-weight: 600;
                   color: #6366F1;
                 }
               }
 
               .detail-bar {
-                height: 3px;
+                height: 2.5px;
                 background: rgba(99, 102, 241, 0.1);
                 border-radius: 2px;
                 overflow: hidden;
@@ -1453,24 +1515,25 @@ const getExperienceText = (exp) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-top: 14px;
-          padding-top: 12px;
+          margin-top: 10px;
+          padding-top: 8px;
           border-top: 1px solid rgba(99, 102, 241, 0.1);
           position: relative;
+          flex-shrink: 0;
 
           .job-stats {
             display: flex;
-            gap: 12px;
+            gap: 10px;
 
             .stat-item {
               display: flex;
               align-items: center;
-              gap: 3px;
-              font-size: 11px;
+              gap: 2px;
+              font-size: 10px;
               color: #9CA3AF;
 
               .el-icon {
-                font-size: 12px;
+                font-size: 11px;
               }
             }
           }
@@ -1478,22 +1541,22 @@ const getExperienceText = (exp) => {
           .action-btn {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 6px 12px;
+            gap: 3px;
+            padding: 5px 10px;
             background: rgba(99, 102, 241, 0.1);
-            border-radius: 6px;
-            font-size: 11px;
+            border-radius: 5px;
+            font-size: 10px;
             font-weight: 500;
             color: #6366F1;
             transition: all 0.3s ease;
 
             .el-icon {
-              font-size: 12px;
+              font-size: 11px;
               transition: transform 0.3s ease;
             }
 
             &:hover .el-icon {
-              transform: translateX(3px);
+              transform: translateX(2px);
             }
           }
         }
@@ -1675,14 +1738,81 @@ const getExperienceText = (exp) => {
   transform: scale(1.05);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .ai-recommend-page {
     .page-content {
       padding: 16px 24px;
     }
 
     .results-state .jobs-grid {
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .ai-recommend-page {
+    .results-state .jobs-grid {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+
+      .job-card {
+        padding: 12px 14px;
+
+        .card-header {
+          margin-bottom: 8px;
+          gap: 10px;
+
+          .match-indicator {
+            .indicator-ring {
+              width: 40px;
+              height: 40px;
+
+              .indicator-value {
+                font-size: 12px;
+              }
+            }
+          }
+
+          .job-basic {
+            .job-title {
+              font-size: 14px;
+            }
+
+            .salary-range .salary-value {
+              font-size: 13px;
+            }
+          }
+        }
+
+        .card-body {
+          .company-section {
+            margin-bottom: 6px;
+          }
+
+          .job-tags {
+            margin-bottom: 6px;
+            gap: 4px;
+
+            .job-tag {
+              padding: 2px 6px;
+              font-size: 9px;
+            }
+          }
+
+          .match-details {
+            padding: 6px 8px;
+          }
+        }
+
+        .card-footer {
+          margin-top: 8px;
+          padding-top: 6px;
+        }
+      }
     }
   }
 }
@@ -1691,7 +1821,7 @@ const getExperienceText = (exp) => {
   .ai-recommend-page {
     .empty-state .empty-layout {
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
 
       .ai-brain-section {
         width: 160px;
@@ -1701,7 +1831,7 @@ const getExperienceText = (exp) => {
 
     .loading-state .loading-layout {
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
 
       .analysis-core {
         width: 140px;
@@ -1711,6 +1841,8 @@ const getExperienceText = (exp) => {
 
     .results-state .jobs-grid {
       grid-template-columns: 1fr;
+      grid-template-rows: repeat(6, minmax(0, 1fr));
+      gap: 8px;
     }
   }
 }
@@ -1719,18 +1851,43 @@ const getExperienceText = (exp) => {
   .ai-recommend-page {
     .page-header {
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       text-align: center;
+      padding: 12px 16px;
+      margin-bottom: 12px;
 
       .header-left {
         flex-direction: column;
+        gap: 10px;
       }
     }
 
+    .page-content {
+      padding: 12px 16px;
+    }
+
     .empty-state {
-      .empty-content {
-        .ai-features {
-          grid-template-columns: 1fr;
+      .empty-layout {
+        gap: 16px;
+
+        .ai-brain-section {
+          width: 140px;
+          height: 140px;
+        }
+
+        .empty-content {
+          .empty-title {
+            font-size: 22px;
+          }
+
+          .ai-features {
+            grid-template-columns: 1fr;
+            gap: 8px;
+
+            .feature-card {
+              padding: 10px 12px;
+            }
+          }
         }
       }
     }
@@ -1738,25 +1895,107 @@ const getExperienceText = (exp) => {
     .loading-state {
       .loading-layout {
         .analysis-info {
+          .analysis-title {
+            font-size: 18px;
+          }
+
           .analysis-steps {
             justify-content: center;
+            gap: 6px;
+
+            .step-item {
+              padding: 4px 10px;
+
+              .step-text {
+                font-size: 11px;
+              }
+            }
           }
 
           .analysis-metrics {
             flex-direction: column;
+            gap: 8px;
           }
         }
       }
     }
 
     .results-state {
-      .results-summary {
-        flex-direction: column;
-        gap: 12px;
+      .results-header {
+        margin-bottom: 10px;
 
-        .summary-divider {
-          width: 60px;
-          height: 1px;
+        .results-summary {
+          flex-direction: row;
+          gap: 16px;
+          padding: 12px 20px;
+
+          .summary-item {
+            .summary-value {
+              font-size: 22px;
+            }
+          }
+
+          .summary-divider {
+            height: 30px;
+          }
+        }
+      }
+
+      .jobs-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-recommend-page {
+    .results-state {
+      .results-header {
+        .results-summary {
+          flex-direction: column;
+          gap: 8px;
+
+          .summary-divider {
+            width: 40px;
+            height: 1px;
+          }
+        }
+      }
+
+      .jobs-grid {
+        .job-card {
+          padding: 10px 12px;
+
+          .highlight-badge {
+            padding: 2px 6px;
+            font-size: 9px;
+          }
+
+          .card-header {
+            gap: 8px;
+
+            .match-indicator {
+              .indicator-ring {
+                width: 36px;
+                height: 36px;
+
+                .indicator-value {
+                  font-size: 11px;
+                }
+              }
+            }
+          }
+
+          .card-body {
+            .match-details {
+              .detail-item {
+                margin-bottom: 4px;
+              }
+            }
+          }
         }
       }
     }
