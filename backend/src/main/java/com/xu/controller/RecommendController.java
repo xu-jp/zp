@@ -20,7 +20,7 @@ public class RecommendController {
     @RequireRole(1)
     public Result<List<JobVO>> getRecommendJobs(
             @RequestAttribute Long userId,
-            @RequestParam(defaultValue = "5") Integer limit) {
+            @RequestParam(defaultValue = "6") Integer limit) {
         List<JobVO> jobs = recommendService.getRecommendJobs(userId, limit);
         return Result.success(jobs);
     }

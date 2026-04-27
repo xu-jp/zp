@@ -1,0 +1,1 @@
+import{r as e}from"./request-BZLLOJC1.js";function a(t){return e({url:"/application/apply",method:"post",data:t})}function i(t){return e({url:"/application/list",method:"get",params:t})}function n(t){return e({url:`/application/cancel/${t}`,method:"delete"})}function c(t){return e({url:`/application/check/${t}`,method:"get"})}export{a,n as b,c,i as g};

@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export function getRecommendJobs(limit = 5) {
+export function getRecommendJobs(limit = 6) {
   return request({
     url: '/recommend/jobs',
     method: 'get',

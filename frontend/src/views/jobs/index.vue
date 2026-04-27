@@ -158,11 +158,14 @@
                 @click="goDetail(job.id)">
                 <div class="card-glow"></div>
                 <div class="card-border"></div>
+
+                <!-- 顶部徽章 -->
                 <div v-if="index < 3" class="highlight-badge">
                   <el-icon><StarFilled /></el-icon>
                   <span>{{ index === 0 ? '最佳匹配' : index === 1 ? '高度推荐' : '优质职位' }}</span>
                 </div>
 
+                <!-- 卡片头部：匹配度 + 职位基本信息 -->
                 <div class="card-header">
                   <div class="match-indicator" :class="getMatchLevel(job.matchScore)">
                     <div class="indicator-ring">
@@ -184,52 +187,54 @@
                   </div>
                 </div>
 
-                <div class="card-body">
-                  <div class="company-section">
-                    <div class="company-logo">
-                      <el-avatar :size="36" :src="job.companyLogo">
-                        {{ job.companyName?.charAt(0) }}
-                      </el-avatar>
-                    </div>
-                    <div class="company-info">
-                      <div class="company-name">{{ job.companyName }}</div>
-                      <div class="company-meta">
-                        <span class="meta-item">
-                          <el-icon><OfficeBuilding /></el-icon>
-                          {{ job.companyIndustry }}
-                        </span>
-                      </div>
-                    </div>
+                <!-- 公司信息 -->
+                <div class="company-section">
+                  <div class="company-logo">
+                    <el-avatar :size="32" :src="job.companyLogo">
+                      {{ job.companyName?.charAt(0) }}
+                    </el-avatar>
                   </div>
-
-                  <div class="job-tags">
-                    <span class="job-tag tag-location">
-                      <el-icon><Location /></el-icon>
-                      {{ job.location }}
-                    </span>
-                    <span class="job-tag tag-experience">
-                      <el-icon><Clock /></el-icon>
-                      {{ getExperienceText(job.experience) }}
-                    </span>
-                    <span class="job-tag tag-education">
-                      <el-icon><Reading /></el-icon>
-                      {{ job.education }}
-                    </span>
-                  </div>
-
-                  <div class="match-details" v-if="job.matchDimensions">
-                    <div class="detail-item" v-for="(dim, key) in job.matchDimensions" :key="key">
-                      <div class="detail-header">
-                        <span class="detail-label">{{ getDimensionLabel(key) }}</span>
-                        <span class="detail-value">{{ dim }}%</span>
-                      </div>
-                      <div class="detail-bar">
-                        <div class="bar-fill" :style="{ width: `${dim}%` }"></div>
-                      </div>
+                  <div class="company-info">
+                    <div class="company-name">{{ job.companyName }}</div>
+                    <div class="company-meta">
+                      <span class="meta-item">
+                        <el-icon><OfficeBuilding /></el-icon>
+                        {{ job.companyIndustry }}
+                      </span>
                     </div>
                   </div>
                 </div>
 
+                <!-- 地点与标签信息 -->
+                <div class="job-tags">
+                  <span class="job-tag tag-location">
+                    <el-icon><Location /></el-icon>
+                    {{ job.location }}
+                  </span>
+                  <span class="job-tag tag-experience">
+                    <el-icon><Clock /></el-icon>
+                    {{ getExperienceText(job.experience) }}
+                  </span>
+                  <span class="job-tag tag-education">
+                    <el-icon><Reading /></el-icon>
+                    {{ job.education }}
+                  </span>
+                </div>
+
+                <!-- 维度得分展示 -->
+                <div class="match-details" v-if="job.matchDimensions">
+                  <div class="detail-item" v-for="(dim, key) in job.matchDimensions" :key="key">
+                    <div class="detail-header">
+                      <span class="detail-label">{{ getDimensionLabel(key) }}</span>
+                      <span class="detail-value" :class="getDimensionScoreClass(dim)">{{ dim }}%</span>
+                    </div>
+                    <div class="detail-bar">
+                      <div class="bar-fill" :class="getDimensionBarClass(dim)" :style="{ width: `${dim}%` }"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 底部操作区 -->
                 <div class="card-footer">
                   <div class="job-stats">
                     <span class="stat-item">
@@ -390,6 +395,20 @@ const getDimensionLabel = (key) => {
   return labels[key] || key
 }
 
+// 根据维度得分返回样式类名
+const getDimensionScoreClass = (score) => {
+  if (score >= 80) return 'score-high'
+  if (score >= 60) return 'score-medium'
+  return 'score-low'
+}
+
+// 根据维度得分返回进度条样式类名
+const getDimensionBarClass = (score) => {
+  if (score >= 80) return 'bar-high'
+  if (score >= 60) return 'bar-medium'
+  return 'bar-low'
+}
+
 const refreshRecommend = () => {
   hasLoaded.value = true
   fetchRecommendJobs()
@@ -472,8 +491,6 @@ const formatProgress = (progress) => {
 
 .ai-recommend-page {
   position: relative;
-  height: calc(100vh - 64px);
-  overflow: hidden;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   .page-background {
@@ -510,7 +527,7 @@ const formatProgress = (progress) => {
     .grid-overlay {
       position: absolute;
       inset: 0;
-      background-image: 
+      background-image:
         linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
       background-size: 50px 50px;
@@ -521,7 +538,6 @@ const formatProgress = (progress) => {
   .page-content {
     position: relative;
     z-index: 1;
-    height: 100%;
     display: flex;
     flex-direction: column;
     padding: 20px 32px;
@@ -652,14 +668,13 @@ const formatProgress = (progress) => {
   }
 
   .main-content {
-    flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
   }
 
+  /* ============ 空状态 ============ */
   .empty-state {
-    flex: 1;
+    min-height: calc(100vh - 64px - 120px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -909,8 +924,9 @@ const formatProgress = (progress) => {
     }
   }
 
+  /* ============ 加载状态 ============ */
   .loading-state {
-    flex: 1;
+    min-height: calc(100vh - 64px - 120px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1102,11 +1118,10 @@ const formatProgress = (progress) => {
     }
   }
 
+  /* ============ 结果展示状态 ============ */
   .results-state {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
 
     .results-header {
       margin-bottom: 16px;
@@ -1150,37 +1165,16 @@ const formatProgress = (progress) => {
       }
     }
 
+    /* 2列3行网格布局 */
     .jobs-grid {
-      flex: 1;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 12px;
-      overflow-y: auto;
-      padding-right: 8px;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: rgba(99, 102, 241, 0.05);
-        border-radius: 3px;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: rgba(99, 102, 241, 0.2);
-        border-radius: 3px;
-
-        &:hover {
-          background: rgba(99, 102, 241, 0.3);
-        }
-      }
+      gap: 16px;
 
       .job-card {
         position: relative;
-        padding: 14px 16px;
-        background: rgba(255, 255, 255, 0.8);
+        padding: 16px 18px;
+        background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(20px);
         border-radius: 14px;
         border: 1px solid rgba(99, 102, 241, 0.1);
@@ -1194,8 +1188,9 @@ const formatProgress = (progress) => {
         flex-direction: column;
 
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12);
+          transform: translateY(-3px);
+          box-shadow: 0 12px 32px rgba(99, 102, 241, 0.14);
+          border-color: rgba(99, 102, 241, 0.25);
 
           .card-glow {
             opacity: 1;
@@ -1207,6 +1202,7 @@ const formatProgress = (progress) => {
           }
         }
 
+        /* 高亮卡片样式 */
         &.highlight-card {
           border-color: rgba(99, 102, 241, 0.3);
           background: rgba(255, 255, 255, 0.95);
@@ -1263,6 +1259,7 @@ const formatProgress = (progress) => {
           pointer-events: none;
         }
 
+        /* 卡片头部：匹配度环 + 职位名称/薪资 */
         .card-header {
           display: flex;
           align-items: flex-start;
@@ -1360,164 +1357,185 @@ const formatProgress = (progress) => {
           }
         }
 
-        .card-body {
-          position: relative;
-          flex: 1;
+        /* 公司信息区域 */
+        .company-section {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
 
-          .company-section {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-
-            .company-logo {
-              :deep(.el-avatar) {
-                background: linear-gradient(135deg, #6366F1, #8B5CF6);
-                color: white;
-                font-weight: 600;
-              }
-            }
-
-            .company-info {
-              flex: 1;
-              min-width: 0;
-
-              .company-name {
-                font-size: 12px;
-                font-weight: 500;
-                color: #111827;
-                margin-bottom: 1px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-
-              .company-meta {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-
-                .meta-item {
-                  display: flex;
-                  align-items: center;
-                  gap: 2px;
-                  font-size: 10px;
-                  color: #6B7280;
-
-                  .el-icon {
-                    font-size: 10px;
-                  }
-                }
-              }
+          .company-logo {
+            :deep(.el-avatar) {
+              background: linear-gradient(135deg, #6366F1, #8B5CF6);
+              color: white;
+              font-weight: 600;
             }
           }
 
-          .job-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 8px;
+          .company-info {
+            flex: 1;
+            min-width: 0;
 
-            .job-tag {
-              display: inline-flex;
+            .company-name {
+              font-size: 12px;
+              font-weight: 500;
+              color: #111827;
+              margin-bottom: 1px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .company-meta {
+              display: flex;
               align-items: center;
-              gap: 2px;
-              padding: 3px 8px;
-              background: rgba(99, 102, 241, 0.05);
-              border-radius: 5px;
-              font-size: 10px;
-              color: #6B7280;
-              border: 1px solid rgba(99, 102, 241, 0.1);
+              gap: 4px;
 
-              .el-icon {
-                font-size: 10px;
-                color: #6366F1;
-              }
-
-              &.tag-location {
-                background: rgba(16, 185, 129, 0.05);
-                border-color: rgba(16, 185, 129, 0.1);
-
-                .el-icon {
-                  color: #10B981;
-                }
-              }
-
-              &.tag-experience {
-                background: rgba(99, 102, 241, 0.05);
-                border-color: rgba(99, 102, 241, 0.1);
-              }
-
-              &.tag-education {
-                background: rgba(245, 158, 11, 0.05);
-                border-color: rgba(245, 158, 11, 0.1);
-
-                .el-icon {
-                  color: #F59E0B;
-                }
-              }
-            }
-          }
-
-          .match-details {
-            padding: 8px 10px;
-            background: rgba(99, 102, 241, 0.02);
-            border-radius: 8px;
-            border: 1px solid rgba(99, 102, 241, 0.05);
-            margin-top: auto;
-
-            .detail-item {
-              margin-bottom: 5px;
-
-              &:last-child {
-                margin-bottom: 0;
-              }
-
-              .detail-header {
+              .meta-item {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                margin-bottom: 2px;
+                gap: 2px;
+                font-size: 10px;
+                color: #6B7280;
 
-                .detail-label {
-                  font-size: 9px;
-                  color: #6B7280;
-                }
-
-                .detail-value {
-                  font-family: 'Space Grotesk', sans-serif;
+                .el-icon {
                   font-size: 10px;
-                  font-weight: 600;
-                  color: #6366F1;
-                }
-              }
-
-              .detail-bar {
-                height: 2.5px;
-                background: rgba(99, 102, 241, 0.1);
-                border-radius: 2px;
-                overflow: hidden;
-
-                .bar-fill {
-                  height: 100%;
-                  background: linear-gradient(90deg, #6366F1, #8B5CF6);
-                  border-radius: 2px;
-                  transition: width 0.5s ease;
                 }
               }
             }
           }
         }
 
+        /* 地点与标签 */
+        .job-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 10px;
+
+          .job-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 8px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 5px;
+            font-size: 11px;
+            color: #6B7280;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+
+            .el-icon {
+              font-size: 11px;
+              color: #6366F1;
+            }
+
+            &.tag-location {
+              background: rgba(16, 185, 129, 0.06);
+              border-color: rgba(16, 185, 129, 0.15);
+              color: #059669;
+              font-weight: 500;
+
+              .el-icon {
+                color: #10B981;
+              }
+            }
+
+            &.tag-experience {
+              background: rgba(99, 102, 241, 0.05);
+              border-color: rgba(99, 102, 241, 0.1);
+            }
+
+            &.tag-education {
+              background: rgba(245, 158, 11, 0.05);
+              border-color: rgba(245, 158, 11, 0.1);
+
+              .el-icon {
+                color: #F59E0B;
+              }
+            }
+          }
+        }
+
+        /* 维度得分展示区域 */
+        .match-details {
+          padding: 8px 10px;
+          background: rgba(99, 102, 241, 0.02);
+          border-radius: 8px;
+          border: 1px solid rgba(99, 102, 241, 0.05);
+          margin-top: auto;
+
+          .detail-item {
+            margin-bottom: 5px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .detail-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 2px;
+
+              .detail-label {
+                font-size: 10px;
+                color: #6B7280;
+              }
+
+              .detail-value {
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+
+                &.score-high {
+                  color: #10B981;
+                }
+
+                &.score-medium {
+                  color: #F59E0B;
+                }
+
+                &.score-low {
+                  color: #EF4444;
+                }
+              }
+            }
+
+            .detail-bar {
+              height: 3px;
+              background: rgba(99, 102, 241, 0.08);
+              border-radius: 2px;
+              overflow: hidden;
+
+              .bar-fill {
+                height: 100%;
+                border-radius: 2px;
+                transition: width 0.5s ease;
+
+                &.bar-high {
+                  background: linear-gradient(90deg, #10B981, #34D399);
+                }
+
+                &.bar-medium {
+                  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+                }
+
+                &.bar-low {
+                  background: linear-gradient(90deg, #EF4444, #F87171);
+                }
+              }
+            }
+          }
+        }
+
+        /* 底部操作区 */
         .card-footer {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-top: 10px;
           padding-top: 8px;
-          border-top: 1px solid rgba(99, 102, 241, 0.1);
+          border-top: 1px solid rgba(99, 102, 241, 0.08);
           position: relative;
           flex-shrink: 0;
 
@@ -1564,7 +1582,7 @@ const formatProgress = (progress) => {
     }
 
     .no-results {
-      flex: 1;
+      min-height: 300px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1624,6 +1642,7 @@ const formatProgress = (progress) => {
   }
 }
 
+/* ============ 关键帧动画 ============ */
 @keyframes float {
   0%, 100% {
     transform: translate(0, 0);
@@ -1738,6 +1757,12 @@ const formatProgress = (progress) => {
   transform: scale(1.05);
 }
 
+/* ============ 桌面端响应式适配 ============ */
+
+/* 大屏桌面（>1400px）：默认布局，2列3行 */
+/* 默认样式已定义，无需额外覆盖 */
+
+/* 中等桌面（1100px-1400px） */
 @media (max-width: 1400px) {
   .ai-recommend-page {
     .page-content {
@@ -1745,19 +1770,20 @@ const formatProgress = (progress) => {
     }
 
     .results-state .jobs-grid {
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 10px;
+      gap: 12px;
+
+      .job-card {
+        padding: 14px 16px;
+      }
     }
   }
 }
 
+/* 小桌面（900px-1100px） */
 @media (max-width: 1100px) {
   .ai-recommend-page {
     .results-state .jobs-grid {
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      gap: 10px;
 
       .job-card {
         padding: 12px 14px;
@@ -1788,23 +1814,39 @@ const formatProgress = (progress) => {
           }
         }
 
-        .card-body {
-          .company-section {
-            margin-bottom: 6px;
+        .company-section {
+          margin-bottom: 6px;
+        }
+
+        .job-tags {
+          margin-bottom: 8px;
+          gap: 4px;
+
+          .job-tag {
+            padding: 2px 6px;
+            font-size: 10px;
           }
+        }
 
-          .job-tags {
-            margin-bottom: 6px;
-            gap: 4px;
+        .match-details {
+          padding: 6px 8px;
 
-            .job-tag {
-              padding: 2px 6px;
-              font-size: 9px;
+          .detail-item {
+            margin-bottom: 4px;
+
+            .detail-header {
+              .detail-label {
+                font-size: 9px;
+              }
+
+              .detail-value {
+                font-size: 10px;
+              }
             }
-          }
 
-          .match-details {
-            padding: 6px 8px;
+            .detail-bar {
+              height: 2.5px;
+            }
           }
         }
 
@@ -1817,6 +1859,7 @@ const formatProgress = (progress) => {
   }
 }
 
+/* 紧凑桌面（<900px）：切换为单列布局 */
 @media (max-width: 900px) {
   .ai-recommend-page {
     .empty-state .empty-layout {
@@ -1841,163 +1884,7 @@ const formatProgress = (progress) => {
 
     .results-state .jobs-grid {
       grid-template-columns: 1fr;
-      grid-template-rows: repeat(6, minmax(0, 1fr));
-      gap: 8px;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .ai-recommend-page {
-    .page-header {
-      flex-direction: column;
       gap: 10px;
-      text-align: center;
-      padding: 12px 16px;
-      margin-bottom: 12px;
-
-      .header-left {
-        flex-direction: column;
-        gap: 10px;
-      }
-    }
-
-    .page-content {
-      padding: 12px 16px;
-    }
-
-    .empty-state {
-      .empty-layout {
-        gap: 16px;
-
-        .ai-brain-section {
-          width: 140px;
-          height: 140px;
-        }
-
-        .empty-content {
-          .empty-title {
-            font-size: 22px;
-          }
-
-          .ai-features {
-            grid-template-columns: 1fr;
-            gap: 8px;
-
-            .feature-card {
-              padding: 10px 12px;
-            }
-          }
-        }
-      }
-    }
-
-    .loading-state {
-      .loading-layout {
-        .analysis-info {
-          .analysis-title {
-            font-size: 18px;
-          }
-
-          .analysis-steps {
-            justify-content: center;
-            gap: 6px;
-
-            .step-item {
-              padding: 4px 10px;
-
-              .step-text {
-                font-size: 11px;
-              }
-            }
-          }
-
-          .analysis-metrics {
-            flex-direction: column;
-            gap: 8px;
-          }
-        }
-      }
-    }
-
-    .results-state {
-      .results-header {
-        margin-bottom: 10px;
-
-        .results-summary {
-          flex-direction: row;
-          gap: 16px;
-          padding: 12px 20px;
-
-          .summary-item {
-            .summary-value {
-              font-size: 22px;
-            }
-          }
-
-          .summary-divider {
-            height: 30px;
-          }
-        }
-      }
-
-      .jobs-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(6, minmax(0, 1fr));
-        gap: 8px;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .ai-recommend-page {
-    .results-state {
-      .results-header {
-        .results-summary {
-          flex-direction: column;
-          gap: 8px;
-
-          .summary-divider {
-            width: 40px;
-            height: 1px;
-          }
-        }
-      }
-
-      .jobs-grid {
-        .job-card {
-          padding: 10px 12px;
-
-          .highlight-badge {
-            padding: 2px 6px;
-            font-size: 9px;
-          }
-
-          .card-header {
-            gap: 8px;
-
-            .match-indicator {
-              .indicator-ring {
-                width: 36px;
-                height: 36px;
-
-                .indicator-value {
-                  font-size: 11px;
-                }
-              }
-            }
-          }
-
-          .card-body {
-            .match-details {
-              .detail-item {
-                margin-bottom: 4px;
-              }
-            }
-          }
-        }
-      }
     }
   }
 }

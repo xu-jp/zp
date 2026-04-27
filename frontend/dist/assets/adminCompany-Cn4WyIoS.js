@@ -1,0 +1,1 @@
+import{r as n}from"./request-BZLLOJC1.js";function r(t){return n({url:"/admin/companies",method:"get",params:t})}function a(t){return n({url:"/admin/companies/audit",method:"put",data:t})}function o(t,e){return n({url:`/admin/companies/permission/${t}`,method:"put",params:{enabled:e}})}export{a,r as g,o as t};

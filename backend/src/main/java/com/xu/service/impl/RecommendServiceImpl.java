@@ -238,7 +238,7 @@ public class RecommendServiceImpl implements RecommendService {
         
         prompt.append("\n【返回格式】\n");
         prompt.append("{\"recommendations\":[{\"jobId\":ID,\"matchScore\":分数,\"reason\":\"理由\"}]}\n");
-        prompt.append("推荐5个最匹配职位，按匹配度排序。\n");
+        prompt.append("推荐6个最匹配职位，按匹配度排序。\n");
         
         return prompt.toString();
     }
