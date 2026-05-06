@@ -6,6 +6,7 @@ import com.xu.dto.ChangePasswordDTO;
 import com.xu.dto.UserProfileDTO;
 import com.xu.service.UserProfileService;
 import com.xu.vo.UserProfileVO;
+import com.xu.vo.UserStatsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,5 +58,12 @@ public class UserProfileController {
             @RequestAttribute Long userId) {
         userProfileService.bindEmail(email, userId);
         return Result.success();
+    }
+
+    @GetMapping("/stats")
+    @RequireRole(1)
+    public Result<UserStatsVO> getUserStats(@RequestAttribute Long userId) {
+        UserStatsVO stats = userProfileService.getUserStats(userId);
+        return Result.success(stats);
     }
 }

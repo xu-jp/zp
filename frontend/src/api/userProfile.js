@@ -38,3 +38,10 @@ export function bindEmail(email) {
     params: { email }
   })
 }
+
+export function getUserStats() {
+  return request({
+    url: '/user/stats',
+    method: 'get'
+  })
+}

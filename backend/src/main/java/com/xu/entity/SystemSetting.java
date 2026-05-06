@@ -14,4 +14,6 @@ public class SystemSetting extends BaseEntity {
     private String settingValue;
 
     private String description;
+
+    private Integer isPublic;
 }

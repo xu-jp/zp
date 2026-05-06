@@ -81,7 +81,7 @@ public class AdminCompanyServiceImpl implements AdminCompanyService {
         String operation = dto.getAuditStatus() == 1 ? "审核通过企业" : "审核拒绝企业";
         operationLogService.log(operatorId, operator != null ? operator.getUsername() : null,
                 operation, "auditCompany", "companyId=" + dto.getCompanyId() + ",status=" + dto.getAuditStatus(),
-                null, 0, null);
+                0, null);
     }
 
     @Override

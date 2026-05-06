@@ -10,6 +10,8 @@ public interface SystemSettingService {
 
     List<SystemSettingVO> getAllSettings();
 
+    List<SystemSettingVO> getPublicSettings();
+
     SystemSettingVO getSettingByKey(String key);
 
     void updateSetting(SystemSettingDTO dto);

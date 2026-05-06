@@ -4,10 +4,19 @@ import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xu.dto.ChangePasswordDTO;
 import com.xu.dto.UserProfileDTO;
+import com.xu.entity.Application;
+import com.xu.entity.Favorite;
+import com.xu.entity.Interview;
+import com.xu.entity.Resume;
 import com.xu.entity.User;
+import com.xu.service.ApplicationService;
+import com.xu.service.FavoriteService;
+import com.xu.service.InterviewService;
+import com.xu.service.ResumeService;
 import com.xu.service.UserService;
 import com.xu.service.UserProfileService;
 import com.xu.vo.UserProfileVO;
+import com.xu.vo.UserStatsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserProfileServiceImpl implements UserProfileService {
 
     private final UserService userService;
+    private final ApplicationService applicationService;
+    private final InterviewService interviewService;
+    private final FavoriteService favoriteService;
+    private final ResumeService resumeService;
 
     @Override
     public UserProfileVO getProfile(Long userId) {
@@ -121,5 +134,30 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         user.setEmail(email);
         userService.updateById(user);
+    }
+
+    @Override
+    public UserStatsVO getUserStats(Long userId) {
+        LambdaQueryWrapper<Application> appWrapper = new LambdaQueryWrapper<>();
+        appWrapper.eq(Application::getUserId, userId)
+                  .eq(Application::getDeleted, 0);
+        Long applications = applicationService.count(appWrapper);
+
+        LambdaQueryWrapper<Interview> interviewWrapper = new LambdaQueryWrapper<>();
+        interviewWrapper.eq(Interview::getUserId, userId)
+                        .eq(Interview::getDeleted, 0);
+        Long interviews = interviewService.count(interviewWrapper);
+
+        LambdaQueryWrapper<Favorite> favoriteWrapper = new LambdaQueryWrapper<>();
+        favoriteWrapper.eq(Favorite::getUserId, userId)
+                       .eq(Favorite::getDeleted, 0);
+        Long favorites = favoriteService.count(favoriteWrapper);
+
+        LambdaQueryWrapper<Resume> resumeWrapper = new LambdaQueryWrapper<>();
+        resumeWrapper.eq(Resume::getUserId, userId)
+                     .eq(Resume::getDeleted, 0);
+        Long resumes = resumeService.count(resumeWrapper);
+
+        return new UserStatsVO(applications, interviews, favorites, resumes);
     }
 }

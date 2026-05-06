@@ -21,8 +21,6 @@ public class OperationLog /*extends BaseEntity*/ {
 
     private String params;
 
-    private String ip;
-
     private Integer status;
 
     private String errorMsg;

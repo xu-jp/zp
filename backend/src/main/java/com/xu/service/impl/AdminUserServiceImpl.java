@@ -97,7 +97,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         String operation = dto.getStatus() == 1 ? "封禁用户" : "解封用户";
         operationLogService.log(operatorId, operator != null ? operator.getUsername() : null,
                 operation, "updateUserStatus", "userId=" + dto.getUserId() + ",status=" + dto.getStatus(),
-                null, 0, null);
+                0, null);
     }
 
     @Override

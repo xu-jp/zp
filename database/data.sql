@@ -47,9 +47,11 @@ INSERT INTO sys_resume (user_id, title, real_name, gender, birthday, phone, emai
 
 DELETE FROM sys_setting;
 
-INSERT INTO sys_setting (setting_key, setting_value, description) VALUES
-('site_name', '智能招聘系统', '网站名称'),
-('site_logo', '/logo.png', '网站Logo'),
-('customer_service_phone', '400-123-4567', '客服电话'),
-('customer_service_email', 'service@example.com', '客服邮箱'),
-('icp_number', '京ICP备12345678号', 'ICP备案号');
+INSERT INTO sys_setting (setting_key, setting_value, description, is_public) VALUES
+('platformName', '智能招聘系统', '平台名称', 1),
+('logo', '/logo.png', '平台Logo', 1),
+('servicePhone', '400-123-4567', '客服电话', 1),
+('serviceEmail', 'service@example.com', '客服邮箱', 1),
+('serviceWechat', 'recruitment_service', '客服微信', 1),
+('description', '智能招聘系统是一个专业的在线招聘平台，致力于为企业和求职者提供高效、便捷的招聘求职服务。', '平台简介', 0),
+('icpNumber', '京ICP备12345678号', 'ICP备案号', 0);

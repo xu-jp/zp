@@ -29,6 +29,15 @@ public class SystemSettingServiceImpl implements SystemSettingService {
     }
 
     @Override
+    public List<SystemSettingVO> getPublicSettings() {
+        LambdaQueryWrapper<SystemSetting> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SystemSetting::getDeleted, 0)
+                .eq(SystemSetting::getIsPublic, 1);
+        List<SystemSetting> settings = systemSettingMapper.selectList(wrapper);
+        return settings.stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
+    @Override
     public SystemSettingVO getSettingByKey(String key) {
         LambdaQueryWrapper<SystemSetting> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SystemSetting::getSettingKey, key)
@@ -43,7 +52,8 @@ public class SystemSettingServiceImpl implements SystemSettingService {
         LambdaUpdateWrapper<SystemSetting> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(SystemSetting::getId, dto.getId())
                 .set(SystemSetting::getSettingValue, dto.getSettingValue())
-                .set(SystemSetting::getDescription, dto.getDescription());
+                .set(SystemSetting::getDescription, dto.getDescription())
+                .set(dto.getIsPublic() != null, SystemSetting::getIsPublic, dto.getIsPublic());
         systemSettingMapper.update(null, updateWrapper);
     }
 
@@ -61,6 +71,7 @@ public class SystemSettingServiceImpl implements SystemSettingService {
         vo.setSettingKey(setting.getSettingKey());
         vo.setSettingValue(setting.getSettingValue());
         vo.setDescription(setting.getDescription());
+        vo.setIsPublic(setting.getIsPublic());
         vo.setCreateTime(setting.getCreateTime());
         vo.setUpdateTime(setting.getUpdateTime());
         return vo;

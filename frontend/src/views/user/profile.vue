@@ -216,7 +216,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Phone, Message, Camera, Calendar, Clock, EditPen, Check } from '@element-plus/icons-vue'
-import { getUserProfile, updateUserProfile, changePassword as changePasswordApi, bindPhone as bindPhoneApi, bindEmail as bindEmailApi } from '@/api/userProfile'
+import { getUserProfile, updateUserProfile, changePassword as changePasswordApi, bindPhone as bindPhoneApi, bindEmail as bindEmailApi, getUserStats } from '@/api/userProfile'
 import { useUserStore } from '@/stores/user'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -335,6 +335,22 @@ const fetchProfile = async () => {
     }
   } catch (error) {
     console.error('获取个人信息失败:', error)
+  }
+}
+
+const fetchUserStats = async () => {
+  try {
+    const res = await getUserStats()
+    if (res.data) {
+      stats.value = {
+        applications: res.data.applications || 0,
+        interviews: res.data.interviews || 0,
+        favorites: res.data.favorites || 0,
+        resumes: res.data.resumes || 0
+      }
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
   }
 }
 
@@ -499,6 +515,7 @@ const getGenderText = (gender) => {
 
 onMounted(() => {
   fetchProfile()
+  fetchUserStats()
 })
 </script>
 

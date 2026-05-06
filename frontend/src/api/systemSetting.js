@@ -29,3 +29,17 @@ export function updateSettings(data) {
     data
   })
 }
+
+export function getPublicSettings() {
+  return request({
+    url: '/public/settings',
+    method: 'get'
+  })
+}
+
+export function getPublicSettingByKey(key) {
+  return request({
+    url: `/public/settings/${key}`,
+    method: 'get'
+  })
+}

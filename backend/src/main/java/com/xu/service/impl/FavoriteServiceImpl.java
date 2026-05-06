@@ -181,4 +181,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             default: return "不限";
         }
     }
+
+    @Override
+    public long count(LambdaQueryWrapper<Favorite> wrapper) {
+        return super.count(wrapper);
+    }
 }

@@ -5,7 +5,7 @@
         <div class="brand-icon">
           <el-icon><Star /></el-icon>
         </div>
-        <span class="brand-name">智能招聘系统</span>
+        <span class="brand-name">{{ settingStore.platformName }}</span>
       </div>
 
       <div class="characters-container">
@@ -84,7 +84,7 @@
           <div class="brand-icon mobile">
             <el-icon><Star /></el-icon>
           </div>
-          <span>智能招聘系统</span>
+          <span>{{ settingStore.platformName }}</span>
         </div>
 
         <transition name="fade-slide" mode="out-in">
@@ -414,13 +414,14 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, h } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { useUserStore, useSettingStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Star, User, Lock, View, Hide, UserFilled, Message, Key } from '@element-plus/icons-vue'
 import { register, sendCode, checkUsername as checkUsernameApi, resetPassword } from '@/api/auth'
 
 const userStore = useUserStore()
+const settingStore = useSettingStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -625,8 +626,18 @@ const handleLogin = async () => {
     await userStore.loginAction(loginForm)
     ElMessage.success('登录成功')
     
-    const redirect = route.query.redirect || '/home'
-    router.push(redirect)
+    if (route.query.redirect) {
+      router.push(route.query.redirect)
+    } else {
+      const userType = userStore.userType
+      if (userType === 3) {
+        router.push('/admin')
+      } else if (userType === 2) {
+        router.push('/home')
+      } else {
+        router.push('/home')
+      }
+    }
   } catch (error) {
     console.error('Login failed:', error)
     errorMessage.value = '用户名或密码错误，请重试'
@@ -708,6 +719,7 @@ onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
   schedulePurpleBlink()
   scheduleBlackBlink()
+  settingStore.fetchSettings()
 })
 
 onUnmounted(() => {

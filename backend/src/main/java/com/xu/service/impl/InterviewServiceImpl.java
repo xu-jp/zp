@@ -172,4 +172,9 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
             default: return "未知";
         }
     }
+
+    @Override
+    public long count(LambdaQueryWrapper<Interview> wrapper) {
+        return super.count(wrapper);
+    }
 }

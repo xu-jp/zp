@@ -3,6 +3,7 @@ package com.xu.service;
 import com.xu.dto.ChangePasswordDTO;
 import com.xu.dto.UserProfileDTO;
 import com.xu.vo.UserProfileVO;
+import com.xu.vo.UserStatsVO;
 
 public interface UserProfileService {
 
@@ -15,4 +16,6 @@ public interface UserProfileService {
     void bindPhone(String phone, Long userId);
 
     void bindEmail(String email, Long userId);
+
+    UserStatsVO getUserStats(Long userId);
 }

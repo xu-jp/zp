@@ -12,4 +12,6 @@ public class SystemSettingDTO {
     private String settingValue;
 
     private String description;
+
+    private Integer isPublic;
 }

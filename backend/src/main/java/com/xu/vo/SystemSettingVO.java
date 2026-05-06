@@ -15,6 +15,8 @@ public class SystemSettingVO {
 
     private String description;
 
+    private Integer isPublic;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

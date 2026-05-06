@@ -239,6 +239,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         return super.updateById(entity);
     }
 
+    @Override
+    public long count(LambdaQueryWrapper<Application> wrapper) {
+        return super.count(wrapper);
+    }
+
     private String getStatusText(Integer status) {
         switch (status) {
             case 0: return "待查看";

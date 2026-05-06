@@ -24,14 +24,13 @@ public class OperationLogServiceImpl implements OperationLogService {
     private final OperationLogMapper operationLogMapper;
 
     @Override
-    public void log(Long userId, String username, String operation, String method, String params, String ip, Integer status, String errorMsg) {
+    public void log(Long userId, String username, String operation, String method, String params, Integer status, String errorMsg) {
         OperationLog log = new OperationLog();
         log.setUserId(userId);
         log.setUsername(username);
         log.setOperation(operation);
         log.setMethod(method);
         log.setParams(params);
-        log.setIp(ip);
         log.setStatus(status);
         log.setErrorMsg(errorMsg);
         log.setCreateTime(LocalDateTime.now());
@@ -81,7 +80,6 @@ public class OperationLogServiceImpl implements OperationLogService {
         vo.setOperation(log.getOperation());
         vo.setMethod(log.getMethod());
         vo.setParams(log.getParams());
-        vo.setIp(log.getIp());
         vo.setStatus(log.getStatus());
         vo.setStatusText(log.getStatus() == 0 ? "成功" : "失败");
         vo.setErrorMsg(log.getErrorMsg());

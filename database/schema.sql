@@ -185,7 +185,6 @@ CREATE TABLE IF NOT EXISTS sys_operation_log (
     operation VARCHAR(100) COMMENT '操作类型',
     method VARCHAR(200) COMMENT '请求方法',
     params TEXT COMMENT '请求参数',
-    ip VARCHAR(50) COMMENT 'IP地址',
     status TINYINT DEFAULT 0 COMMENT '状态：0-成功 1-失败',
     error_msg TEXT COMMENT '错误信息',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

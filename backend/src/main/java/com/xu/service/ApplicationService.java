@@ -27,4 +27,6 @@ public interface ApplicationService {
     boolean updateById(Application application);
 
     List<Application> list(LambdaQueryWrapper<Application> wrapper);
+
+    long count(LambdaQueryWrapper<Application> wrapper);
 }

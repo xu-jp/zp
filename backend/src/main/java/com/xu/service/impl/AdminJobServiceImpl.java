@@ -89,7 +89,7 @@ public class AdminJobServiceImpl implements AdminJobService {
         String operation = dto.getAuditStatus() == 1 ? "批量审核通过职位" : "批量审核拒绝职位";
         operationLogService.log(operatorId, operator != null ? operator.getUsername() : null,
                 operation, "auditJobs", "jobIds=" + dto.getJobIds() + ",status=" + dto.getAuditStatus(),
-                null, 0, null);
+                0, null);
     }
 
     @Override
@@ -107,7 +107,7 @@ public class AdminJobServiceImpl implements AdminJobService {
 
         User operator = userMapper.selectById(operatorId);
         operationLogService.log(operatorId, operator != null ? operator.getUsername() : null,
-                "违规下架职位", "offlineJob", "jobId=" + jobId, null, 0, null);
+                "违规下架职位", "offlineJob", "jobId=" + jobId, 0, null);
     }
 
     @Override

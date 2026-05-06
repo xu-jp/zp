@@ -5,18 +5,7 @@
         <div class="card-header">
           <span>操作日志</span>
           <div class="filters">
-            <el-select v-model="moduleFilter" placeholder="操作模块" clearable @change="handleSearch" style="width: 120px; margin-right: 10px">
-              <el-option label="用户管理" value="用户管理" />
-              <el-option label="企业管理" value="企业管理" />
-              <el-option label="职位管理" value="职位管理" />
-              <el-option label="系统设置" value="系统设置" />
-            </el-select>
-            <el-select v-model="typeFilter" placeholder="操作类型" clearable @change="handleSearch" style="width: 120px; margin-right: 10px">
-              <el-option label="新增" value="新增" />
-              <el-option label="修改" value="修改" />
-              <el-option label="删除" value="删除" />
-              <el-option label="审核" value="审核" />
-            </el-select>
+            <el-input v-model="operationFilter" placeholder="操作描述" clearable style="width: 180px; margin-right: 10px" @keyup.enter="handleSearch" />
             <el-date-picker
               v-model="dateRange"
               type="daterange"
@@ -32,22 +21,26 @@
       </template>
 
       <el-table :data="logList" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="module" label="操作模块" width="100" />
-        <el-table-column prop="type" label="操作类型" width="80">
+        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column prop="operation" label="操作描述" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="method" label="操作方法" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="params" label="请求参数" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="username" label="操作人" min-width="130">
           <template #default="{ row }">
-            <el-tag :type="getTypeTagType(row.type)">{{ row.type }}</el-tag>
+            {{ row.username || '-' }} (ID: {{ row.userId }})
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="操作内容" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="operatorName" label="操作人" width="100" />
-        <el-table-column prop="ip" label="IP地址" width="120" />
-        <el-table-column prop="createTime" label="操作时间" width="160">
+        <el-table-column prop="status" label="操作状态" min-width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 0 ? 'success' : 'danger'">{{ row.statusText }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="操作时间" min-width="160">
           <template #default="{ row }">
             {{ formatDate(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="80">
+        <el-table-column label="操作" fixed="right" min-width="70">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDetailDialog(row)">详情</el-button>
           </template>
@@ -67,20 +60,21 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="detailDialogVisible" title="日志详情" width="500px">
+    <el-dialog v-model="detailDialogVisible" title="日志详情" width="600px">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="日志ID">{{ currentLog.id }}</el-descriptions-item>
-        <el-descriptions-item label="操作模块">{{ currentLog.module }}</el-descriptions-item>
-        <el-descriptions-item label="操作类型">
-          <el-tag :type="getTypeTagType(currentLog.type)">{{ currentLog.type }}</el-tag>
+        <el-descriptions-item label="操作描述">{{ currentLog.operation }}</el-descriptions-item>
+        <el-descriptions-item label="操作方法">{{ currentLog.method }}</el-descriptions-item>
+        <el-descriptions-item label="操作人">{{ currentLog.username }} (ID: {{ currentLog.userId }})</el-descriptions-item>
+        <el-descriptions-item label="操作状态">
+          <el-tag :type="currentLog.status === 0 ? 'success' : 'danger'">{{ currentLog.statusText }}</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="操作内容">{{ currentLog.content }}</el-descriptions-item>
-        <el-descriptions-item label="操作人ID">{{ currentLog.operatorId }}</el-descriptions-item>
-        <el-descriptions-item label="操作人姓名">{{ currentLog.operatorName }}</el-descriptions-item>
-        <el-descriptions-item label="IP地址">{{ currentLog.ip }}</el-descriptions-item>
         <el-descriptions-item label="操作时间">{{ formatDate(currentLog.createTime) }}</el-descriptions-item>
-        <el-descriptions-item label="请求参数" v-if="currentLog.requestParams">
-          <pre style="max-height: 150px; overflow-y: auto; white-space: pre-wrap">{{ currentLog.requestParams }}</pre>
+        <el-descriptions-item label="请求参数" v-if="currentLog.params">
+          <pre style="max-height: 200px; overflow-y: auto; white-space: pre-wrap; background: #f5f7fa; padding: 10px; border-radius: 4px">{{ currentLog.params }}</pre>
+        </el-descriptions-item>
+        <el-descriptions-item label="错误信息" v-if="currentLog.errorMsg">
+          <span style="color: #f56c6c">{{ currentLog.errorMsg }}</span>
         </el-descriptions-item>
       </el-descriptions>
     </el-dialog>
@@ -96,8 +90,7 @@ const logList = ref([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(20)
-const moduleFilter = ref('')
-const typeFilter = ref('')
+const operationFilter = ref('')
 const dateRange = ref([])
 const detailDialogVisible = ref(false)
 const currentLog = ref({})
@@ -106,8 +99,7 @@ const fetchLogs = async () => {
   loading.value = true
   try {
     const params = {
-      module: moduleFilter.value,
-      type: typeFilter.value,
+      operation: operationFilter.value,
       pageNum: pageNum.value,
       pageSize: pageSize.value
     }
@@ -133,16 +125,6 @@ const handleSearch = () => {
 const openDetailDialog = (log) => {
   currentLog.value = log
   detailDialogVisible.value = true
-}
-
-const getTypeTagType = (type) => {
-  switch (type) {
-    case '新增': return 'success'
-    case '修改': return 'warning'
-    case '删除': return 'danger'
-    case '审核': return 'primary'
-    default: return 'info'
-  }
 }
 
 const formatDate = (date) => {

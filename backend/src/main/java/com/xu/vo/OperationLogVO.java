@@ -19,8 +19,6 @@ public class OperationLogVO {
 
     private String params;
 
-    private String ip;
-
     private Integer status;
 
     private String statusText;

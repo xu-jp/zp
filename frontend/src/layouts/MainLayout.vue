@@ -107,7 +107,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useUserStore, useNavigationStore } from '@/stores'
+import { useUserStore, useNavigationStore, useSettingStore } from '@/stores'
 import { useRouter, useRoute } from 'vue-router'
 import {
   House, Fold, Expand, ArrowDown, User, SwitchButton,
@@ -116,6 +116,7 @@ import {
 
 const userStore = useUserStore()
 const navigationStore = useNavigationStore()
+const settingStore = useSettingStore()
 const router = useRouter()
 const route = useRoute()
 const isCollapse = ref(false)
@@ -169,20 +170,22 @@ watch(() => route.path, (newPath, oldPath) => {
 // 页面加载时恢复状态
 onMounted(() => {
   navigationStore.pushHistory(route)
+  settingStore.fetchSettings()
 })
 
 const userType = computed(() => userStore.userType)
 
 const centerName = computed(() => {
+  const platformName = settingStore.platformName
   switch (userType.value) {
     case 1:
-      return '求职者中心'
+      return platformName || '求职者中心'
     case 2:
-      return '招聘者中心'
+      return platformName || '招聘者中心'
     case 3:
-      return '管理中心'
+      return platformName || '管理中心'
     default:
-      return '智能招聘系统'
+      return platformName || '智能招聘系统'
   }
 })
 
